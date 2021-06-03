@@ -16,6 +16,7 @@ Including another URLconf
 from django.urls import path, include
 from django.conf.urls.static import static
 from . import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('cart/' , views.cart , name = "cart"),
@@ -24,7 +25,8 @@ urlpatterns = [
     path('cart/checkout/complete_order/', views.completeOrder, name="complete_order"),
     path('admin-login/', views.adminLogin, name="admin_login"),
     path('admin-panel/', views.adminDashboard, name="admin"),
-    path('', views.catalog  , name = "catalog"),
+    path('', views.catalog , name = "catalog"),
+    path('logout', auth_views.LogoutView.as_view(next_page='/'), name="logout"),
 
 ]
 
