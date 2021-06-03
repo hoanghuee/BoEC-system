@@ -25,5 +25,6 @@ urlpatterns = [
     path('admin-login/', views.adminLogin, name="admin_login"),
     path('admin-panel/', views.adminDashboard, name="admin"),
     path('', views.catalog  , name = "catalog"),
+
 ]
 
