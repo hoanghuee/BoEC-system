@@ -1,11 +1,5 @@
 from django.db import models
 
-# Create your models here.
-class Product(models.Model):
-    name = models.CharField(max_length=800)
-    price = models.FloatField()
-    description = models.TextField()
-    imglink = models.CharField(max_length=800)
 
 class Order(models.Model):
     first_name = models.CharField(max_length=400)
@@ -16,5 +10,3 @@ class Order(models.Model):
     payment_data = models.CharField(max_length=400)
     items = models.TextField()
     fulfilled = models.BooleanField()
-
-
