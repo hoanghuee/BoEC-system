@@ -3,55 +3,58 @@ from django.http import HttpResponse
 from .models import Order, Product
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+
+
 # Create your views here.
 
 
-
-
 def catalog(request):
-    #check that if there is cart already , if not create one
+    # check that if there is cart already , if not create one
     if 'cart' not in request.session:
         request.session['cart'] = []
     cart = request.session['cart']
-    #dont expire untill the browser is closed
+    # dont expire untill the browser is closed
     request.session.set_expiry(0)
-    #getting all products, to show in main page
+    # getting all products, to show in main page
     store_items = Product.objects.all()
     ctx = {
-        'store_items' : store_items,
-        'cart_size' : len(cart)
+        'store_items': store_items,
+        'cart_size': len(cart)
     }
     if request.method == "POST":
-        #will add the object that they have posted to the card.
-        #we called our form object input object ID . the input name = "obj_id"
-        #after clicking to addToItem  => the item will add to cart by its porduct.id as value and obj_id as name in input
+        # will add the object that they have posted to the card.
+        # we called our form object input object ID . the input name = "obj_id"
+        # after clicking to addToItem  => the item will add to cart by its porduct.id as value and obj_id as name in input
         cart.append(int(request.POST['obj_id']))
-        #catalog is the name of the main page
-        return  redirect('catalog')
+        # catalog is the name of the main page
+        return redirect('catalog')
 
-    return render(request , "main.html" , ctx)
+    return render(request, "main.html", ctx)
 
-#************************************************
-#cart page data
-#getting and returning real product from DB
+
+# ************************************************
+# cart page data
+# getting and returning real product from DB
 def cartItems(cart):
     items = []
-    #the products that are added to cart , now will be gotten from DB
-    #and they will be added in items
+    # the products that are added to cart , now will be gotten from DB
+    # and they will be added in items
     for item in cart:
-        #we added products by their id , so item here is the id
-        #and we use this item to be = id in query
+        # we added products by their id , so item here is the id
+        # and we use this item to be = id in query
         items.append(Product.objects.get(id=item))
     return items
 
 
-#return total_price for each product(item)
+# return total_price for each product(item)
 def priceCart(cart):
     cart_items = cartItems(cart)
     price = 0
     for item in cart_items:
         price += item.price
     return price
+
+
 def genItemsList(cart):
     cart_items = cartItems(cart)
     items_list = ""
@@ -61,31 +64,31 @@ def genItemsList(cart):
     return items_list
 
 
-#cart page
+# cart page
 def cart(request):
     cart = request.session['cart']
     request.session.set_expiry(0)
     ctx = {
-        'cart':cart ,
-        #the number of products in cart
-        'cart_size' : len(cart) ,
-        #the porduct in cart
+        'cart': cart,
+        # the number of products in cart
+        'cart_size': len(cart),
+        # the porduct in cart
         'cart_items': cartItems(cart),
-        #the total price of each product in cart by knwoing its number
-        'total_price':priceCart(cart),
+        # the total price of each product in cart by knwoing its number
+        'total_price': priceCart(cart),
     }
-    return render(request , "cart.html" , ctx)
+    return render(request, "cart.html", ctx)
+
 
 def removefromcart(request):
     request.session.set_expiry(0)
-    #getting obj_id or the name  of the item that is going to be deleted
+    # getting obj_id or the name  of the item that is going to be deleted
     obj_to_remove = int(request.POST['obj_id'])
-    #finding the index of that item in cart.array
+    # finding the index of that item in cart.array
     obj_index = request.session['cart'].index(obj_to_remove)
-    #pop it !
+    # pop it !
     request.session['cart'].pop(obj_index)
     return redirect('cart')
-
 
 
 def checkout(request):
@@ -94,9 +97,9 @@ def checkout(request):
     cart = request.session['cart']
     request.session.set_expiry(0)
     ctx = {
-        'cart':cart ,
-        'cart_size':len(cart) ,
-        'total_price':priceCart(cart)
+        'cart': cart,
+        'cart_size': len(cart),
+        'total_price': priceCart(cart)
     }
     return render(request, "checkout.html", ctx)
 
@@ -104,9 +107,9 @@ def checkout(request):
 def completeOrder(request):
     cart = request.session['cart']
     request.session.set_expiry(0)
-    ctx = {'cart':cart,
-           'cart_size':len(cart),
-           'cart_items':cartItems(cart),
+    ctx = {'cart': cart,
+           'cart_size': len(cart),
+           'cart_items': cartItems(cart),
            'total_price': priceCart(cart)}
     order = Order()
     order.items = genItemsList(cart)
@@ -122,22 +125,39 @@ def completeOrder(request):
     return render(request, "complete_order.html", ctx)
 
 
+@login_required
+def index(request):
+    group = request.user.groups.filter(user=request.user)[0]
+    if group.name == "warehouse_staff":
+        return redirect("admin")
+    elif group.name == "customer":
+        return redirect("/")
+
+    context = {}
+    template = "main.html"
+    return render(request, template, context)
+
+
 def adminLogin(request):
     if request.method == "POST":
         usname = request.POST["username"]
         pwd = request.POST["password"]
         user = authenticate(username=usname, password=pwd)
         if user is not None:
-                login(request, user)
+            login(request, user)
+            group = request.user.groups.filter(user=request.user)[0]
+            if group.name == "warehouse_staff":
                 return redirect("admin")
+            elif group.name == "customer":
+                return redirect("/")
+            # return redirect("admin")
         else:
             return render(request, "admin_login.html", {'login': False})
 
+    return render(request, "admin_login.html", None)
 
-    return render(request, "admin_login.html",None)
 
 def adminDashboard(request):
     orders = Order.objects.all()
     ctx = {'orders': orders}
     return render(request, "admin_panel.html", ctx)
-
