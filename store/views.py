@@ -90,7 +90,7 @@ def removefromcart(request):
     request.session['cart'].pop(obj_index)
     return redirect('cart')
 
-
+@login_required
 def checkout(request):
     if 'cart' not in request.session:
         request.session['cart'] = []
@@ -103,7 +103,7 @@ def checkout(request):
     }
     return render(request, "checkout.html", ctx)
 
-
+@login_required
 def completeOrder(request):
     cart = request.session['cart']
     request.session.set_expiry(0)
@@ -125,19 +125,6 @@ def completeOrder(request):
     return render(request, "complete_order.html", ctx)
 
 
-@login_required
-def index(request):
-    group = request.user.groups.filter(user=request.user)[0]
-    if group.name == "warehouse_staff":
-        return redirect("admin")
-    elif group.name == "customer":
-        return redirect("/")
-
-    context = {}
-    template = "main.html"
-    return render(request, template, context)
-
-
 def adminLogin(request):
     if request.method == "POST":
         usname = request.POST["username"]
@@ -156,8 +143,12 @@ def adminLogin(request):
 
     return render(request, "admin_login.html", None)
 
-
+@login_required
 def adminDashboard(request):
-    orders = Order.objects.all()
-    ctx = {'orders': orders}
-    return render(request, "admin_panel.html", ctx)
+        group = request.user.groups.filter(user=request.user)[0]
+        if group.name == "warehouse_staff":
+            orders = Order.objects.all()
+            ctx = {'orders': orders}
+            return render(request, "admin_panel.html", ctx)
+        else:
+            return render(request, "admin_login.html", {'login': False})

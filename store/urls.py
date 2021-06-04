@@ -23,7 +23,7 @@ urlpatterns = [
     path('cart/remove/', views.removefromcart, name="remove"),
     path('cart/checkout/',views.checkout , name="checkout"),
     path('cart/checkout/complete_order/', views.completeOrder, name="complete_order"),
-    path('admin-login/', views.adminLogin, name="admin_login"),
+    path('accounts/login/', views.adminLogin, name="admin_login"),
     path('admin-panel/', views.adminDashboard, name="admin"),
     path('', views.catalog , name = "catalog"),
     path('logout', auth_views.LogoutView.as_view(next_page='/'), name="logout"),
